@@ -1,0 +1,130 @@
+%%% Three Dimensional Refractive Telescope Research Code 
+%%% Research at the Georgia Institute of Technology's 
+%%% Space Systems Design Lab with Professor Hirabayashi
+%%% Anay Naik April 2024
+
+clear;
+clc;
+close all
+
+%% INPUT
+%% Aperture Location Input Variables
+% Enter x-coordinate of aperture location:
+x_aperture = 5;
+% Enter y-coordinate of aperture location:
+y_aperture = 5;
+% Enter z-coordinate of aperture location:
+z_aperture = 5;
+
+% What is the pixel aperture length?:
+n_aperture = 5;
+% What is the pixel aperture width?:
+m_aperture = 5;
+
+%% Triangular Facet Node 1 Input Variables
+% Enter x-coordinate of node 1:
+x1 = 0;
+% Enter y-coordinate of node 1:
+y1 = 0;
+% Enter z-coordinate of node 1:
+z1 = 7;
+
+%% Triangular Facet Node 2 Input Variables
+% Enter x-coordinate of node 2:
+x2 = 2;
+% Enter y-coordinate of node 2:
+y2 = 3;
+% Enter z-coordinate of node 2:
+z2 = 8;
+
+%% Triangular Facet Node 3 Input Variables
+% Enter x-coordinate of node 3:
+x3 = 5;
+% Enter y-coordinate of node 3:
+y3 = 0;
+% Enter z-coordinate of node 3:
+z3 = 7;
+
+
+
+%% OUTPUT
+%% Angle between facet node plane and aperture location plane
+% Three points on a flat plane at z = 0 for cross product
+ap1 = [0,0,0];
+ap2 = [1,1,0];
+ap3 = [5,6,0];
+apnormal = cross(ap1-ap2, ap1-ap3);
+% Three points on the facet node plane for cross product
+ap4 = [x1,y1,z1];
+ap5 = [x2,y2,z2];
+ap6 = [x3,y2,z3];
+normal2 = cross(ap4-ap5, ap4-ap6);
+% Finding angle between the two planes using their cross products and normal vectors
+theta=acosd(abs(sum(apnormal.*normal2))/norm(apnormal)/norm(normal2));
+
+%% Determining location for each point 
+appoint = [x_aperture,y_aperture,z_aperture];
+num = 1;
+for i = 1:n_aperture
+    for j = 1:m_aperture
+        % Figuring out the every different data point at the same z height point 
+        vect{num} = [x_aperture-i,y_aperture-j,z_aperture-0];
+        num = num + 1;
+    end
+end
+
+%% Determining value for each point
+lengthvect = length(vect);
+for k = 1:lengthvect
+
+    % Plane offset parameter for parametric line
+    d = -dot(normal2,ap4);
+    % Creating the parametric line parameter for each vector point
+    t = - (d + dot(normal2,appoint)) / dot(normal2,vect{k});
+    % Intersection coordinate for each vector point
+    Iout{k} = appoint + vect{k}*t;
+
+end
+
+%% Creating output matrix and removing values not in the facet node
+xs = [x1,x2,x3];
+ys = [y1,y2,y3];
+
+for q = 1:(length(Iout))
+
+    outval = Iout{q};
+    vals = vect{q};
+    vals1 = vals(1);
+    vals2 = vals(2);
+    % Testing if each point is within triangular facet node
+    in = inpolygon(vals1,vals2,xs,ys);
+
+    if in == true
+        % If the point is within the triangular facet node, then output is
+        % displayed
+        xarrayoutput(q) = outval(1);
+        yarrayoutput(q) = outval(2);
+        zarrayoutput(q) = outval(3);
+    else
+        % If the point is not within the triangular facet node, then NaN is
+        % displayed
+        xarrayoutput(q) = NaN;
+        yarrayoutput(q) = NaN;
+        zarrayoutput(q) = NaN;
+    end
+
+end
+
+% Reshaping output arrays into correct user inputted dimensions
+xarrayoutput = reshape(xarrayoutput,n_aperture,m_aperture);
+yarrayoutput = reshape(yarrayoutput,n_aperture,m_aperture);
+zarrayoutput = reshape(zarrayoutput,n_aperture,m_aperture);
+
+%% Printing Arrays
+disp('X Array:')
+disp(xarrayoutput)
+disp('Y Array:')
+disp(yarrayoutput)
+disp('Z Array:')
+disp(zarrayoutput)
+disp('CODE EXECUTION COMPLETE');
